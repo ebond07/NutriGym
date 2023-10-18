@@ -8,7 +8,7 @@
 import SwiftUI
 
 // Model
-struct Client {
+struct Client: Identifiable {
     var id: UUID
     var name: String
 }
@@ -34,8 +34,25 @@ struct DashboardView: View {
 }
 
 struct ClientsView: View {
+    @ObservedObject var viewModel: ClientsViewModel
+    @State private var selectedClient: Client?
+
     var body: some View {
-        Text("Clients")
+        NavigationView {
+            List(viewModel.clients, id: \.id) { client in
+                Button(action: {
+                    selectedClient = client
+                }) {
+                    Text(client.name)
+                }
+            }
+            .sheet(item: $selectedClient) { client in
+                NavigationView {
+                    ClientDetailView(client: client)
+                }
+            }
+            .navigationBarTitle("Clients")
+        }
     }
 }
 
@@ -58,8 +75,8 @@ struct ContentView: View {
                                 .padding(20)
                         }
                         NavigationLink(destination: ClientsView(viewModel: clientsViewModel)) {
-                                                    Text("Clients")
-                                                        .padding(20)
+                            Text("Clients")
+                                .padding(20)
                         }
                         NavigationLink(destination: SettingsView()) {
                             Text("Settings")
@@ -78,13 +95,13 @@ struct ContentView: View {
                 Image(systemName: "house.fill")
                 Text("Home")
             }
-            
+
             ClientsView(viewModel: clientsViewModel)
                 .tabItem {
                     Image(systemName: "person.2.fill")
                     Text("Clients")
                 }
-            
+
             SettingsView()
                 .tabItem {
                     Image(systemName: "gear")
@@ -92,14 +109,17 @@ struct ContentView: View {
                 }
         }
     }
-    struct ClientsView: View {
-        @ObservedObject var viewModel: ClientsViewModel
+}
 
-        var body: some View {
-            List(viewModel.clients, id: \.id) { client in
-                Text(client.name)
-            }
+struct ClientDetailView: View {
+    let client: Client
+
+    var body: some View {
+        VStack {
+            Text("Name: \(client.name)")
+            // Add more client information here (e.g., age, height, weight)
         }
+        .navigationBarTitle(client.name)
     }
 }
 
