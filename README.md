@@ -31,10 +31,15 @@ NutriGym addresses these challenges by providing gym owners with a comprehensive
 ## Screenshots
 
 ![Home Page / Dashboard](/path/to/screenshot1.png)
+<img src="https://github.com/ebond07/NutriGym/assets/43860533/68ea569f-dff2-4274-8d08-7add072ecc3e" alt="image" width="200" height="400" />
+
+
 ![Client List](/path/to/screenshot2.png)
 ![Nutritional Plan](/path/to/screenshot3.png)
 ![Progress Tracker](/path/to/screenshot4.png)
 ![Client Page](/path/to/screenshot5.png)
+
+
 
 ## Getting Started
 
