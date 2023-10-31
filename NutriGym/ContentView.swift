@@ -7,6 +7,15 @@
 
 import SwiftUI
 
+extension UIColor {
+    func toColor() -> Color {
+        return Color(self)
+    }
+}
+
+// Example of converting a UIColor to Color
+let uiColor = UIColor(red: 139/255, green: 69/255, blue: 19/255, alpha: 1.0) // Warm Brown
+let swiftUIColor = uiColor.toColor()
 //
 enum Gender: String, CaseIterable {
     case male = "Male"
@@ -28,8 +37,21 @@ struct NutritionalPlan: Identifiable {
     var id: UUID
     var name: String
     var description: String
+    var caloriesPerDay: Int
+    var proteinIntake: Double
+    var carbohydrateIntake: Double
+    var fatIntake: Double
 }
 
+// Model for User Settings
+class UserSettings: ObservableObject {
+    @Published var name: String = "John Doe"
+    @Published var email: String = "johndoe@example.com"
+    @Published var pushNotificationsEnabled: Bool = true
+    @Published var darkModeEnabled: Bool = false
+}
+
+let userSettings = UserSettings()
 
 // View Model
 class ClientsViewModel: ObservableObject {
@@ -56,38 +78,225 @@ class NutritionalPlansViewModel: ObservableObject {
     init() {
         // Initialize or fetch nutritional plan data here
         self.nutritionalPlans = [
-            NutritionalPlan(id: UUID(), name: "Plan 1", description: "Description for Plan 1"),
-            NutritionalPlan(id: UUID(), name: "Plan 2", description: "Description for Plan 2")
+            NutritionalPlan(id: UUID(), name: "Plan 1", description: "Description for Plan 1", caloriesPerDay: 2000, proteinIntake: 150.0, carbohydrateIntake: 250.0, fatIntake: 50.0),
+            NutritionalPlan(id: UUID(), name: "Plan 2", description: "Description for Plan 2", caloriesPerDay: 1800, proteinIntake: 120.0, carbohydrateIntake: 210.0, fatIntake: 45.0),
+            NutritionalPlan(id: UUID(), name: "Plan 3", description: "Description for Plan 3", caloriesPerDay: 2200, proteinIntake: 160.0, carbohydrateIntake: 270.0, fatIntake: 55.0),
+            NutritionalPlan(id: UUID(), name: "Plan 4", description: "Description for Plan 4", caloriesPerDay: 1900, proteinIntake: 130.0, carbohydrateIntake: 220.0, fatIntake: 48.0),
+            NutritionalPlan(id: UUID(), name: "Plan 5", description: "Description for Plan 5", caloriesPerDay: 2100, proteinIntake: 140.0, carbohydrateIntake: 240.0, fatIntake: 52.0)
             // Add more nutritional plans as needed
         ]
     }
 }
 
+
 struct NutritionalPlansView: View {
     @ObservedObject var viewModel: NutritionalPlansViewModel
+    @State private var isAddingPlan = false
+    @State private var newPlanName = ""
+    @State private var newPlanDescription = ""
+    @State private var newPlanCalories = ""
+    @State private var newPlanProtein = ""
+    @State private var newPlanCarbohydrates = ""
+    @State private var newPlanFat = ""
 
     var body: some View {
-        List(viewModel.nutritionalPlans, id: \.id) { plan in
-            NavigationLink(destination: NutritionalPlanDetailView(plan: plan)) {
-                Text(plan.name)
+        NavigationView {
+            List {
+                ForEach(viewModel.nutritionalPlans) { plan in
+                    HStack {
+                        NavigationLink(destination: NutritionalPlanDetailView(plan: plan)) {
+                            Text(plan.name)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                        }
+                        Spacer()
+                        Button(action: {
+                            // Handle delete action here
+                        }) {
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+            }
+            .navigationBarTitle("Nutritional Plans")
+
+            .navigationBarItems(trailing:
+                Button(action: {
+                    isAddingPlan = true
+                }) {
+                    Image(systemName: "plus")
+                        .padding(10)
+                }
+            )
+            .sheet(isPresented: $isAddingPlan) {
+                VStack {
+                    Text("New Nutritional Plan Form")
+                        .font(.title)
+                        .padding()
+
+                    TextField("Enter Plan Name", text: $newPlanName)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+
+                    TextField("Enter Description", text: $newPlanDescription)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+
+                    TextField("Calories per Day", text: $newPlanCalories)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+
+                    TextField("Protein Intake (g)", text: $newPlanProtein)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+
+                    TextField("Carbohydrate Intake (g)", text: $newPlanCarbohydrates)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+
+                    TextField("Fat Intake (g)", text: $newPlanFat)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+
+                    HStack {
+                        Button("Cancel", action: {
+                            isAddingPlan = false
+                        })
+                        .buttonStyle(DefaultButtonStyle())
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.red)
+                        .cornerRadius(10)
+
+                        Button("Add Plan", action: {
+                            let newPlanID = UUID()
+
+                            let newPlan = NutritionalPlan(
+                                id: newPlanID,
+                                name: newPlanName,
+                                description: newPlanDescription,
+                                caloriesPerDay: Int(newPlanCalories) ?? 0,
+                                proteinIntake: Double(newPlanProtein) ?? 0.0,
+                                carbohydrateIntake: Double(newPlanCarbohydrates) ?? 0.0,
+                                fatIntake: Double(newPlanFat) ?? 0.0
+                            )
+
+                            viewModel.nutritionalPlans.append(newPlan)
+                            isAddingPlan = false
+                        })
+                        .buttonStyle(DefaultButtonStyle())
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                    }
+                }
             }
         }
-        .navigationBarTitle("Nutritional Plans")
     }
 }
+
 
 struct NutritionalPlanDetailView: View {
     let plan: NutritionalPlan
 
     var body: some View {
         VStack {
-            Text("Name: \(plan.name)")
-            Text("Description: \(plan.description)")
-            // Add more details about the nutritional plan
+            VStack {
+                Text(plan.name)
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .padding(.top, 20)
+                    .foregroundColor(.black) // Change the text color
+
+                Text("Description: \(plan.description)")
+                    .font(.subheadline)
+                    .foregroundColor(.black) // Change the text color
+                    .padding(.top, 5)
+            }
+            .padding(.top, 10)
+
+            Divider()
+                .padding([.top, .bottom], 10)
+
+            VStack(alignment: .leading) {
+                Text("Calories per Day")
+                    .font(.headline)
+                    .foregroundColor(.black) // Change the text color
+
+                Text("\(plan.caloriesPerDay) kcal")
+                    .font(.subheadline)
+                    .foregroundColor(.black) // Change the text color
+            }
+
+            Spacer()
+
+            VStack(alignment: .leading) {
+                Text("Protein Intake")
+                    .font(.headline)
+                    .foregroundColor(.black) // Change the text color
+
+                Text("\(plan.proteinIntake) grams")
+                    .font(.subheadline)
+                    .foregroundColor(.black) // Change the text color
+            }
+
+            Spacer()
+
+            VStack(alignment: .leading) {
+                Text("Carbohydrate Intake")
+                    .font(.headline)
+                    .foregroundColor(.black) // Change the text color
+
+                Text("\(plan.carbohydrateIntake) grams")
+                    .font(.subheadline)
+                    .foregroundColor(.black) // Change the text color
+            }
+
+            Spacer()
+
+            VStack(alignment: .leading) {
+                Text("Fat Intake")
+                    .font(.headline)
+                    .foregroundColor(.black) // Change the text color
+
+                Text("\(plan.fatIntake) grams")
+                    .font(.subheadline)
+                    .foregroundColor(.black) // Change the text color
+            }
+
+            Spacer()
+            Button(action: {
+                // Handle delete action here
+            
+            }) {
+                Image(systemName: "trash.circle.fill")
+                    .resizable()
+                    .frame(width: 30, height: 30)
+                    .foregroundColor(.red)
+                    .padding()
+            }
         }
-        .navigationBarTitle(plan.name)
+        .background(
+            Image("proteinshake")
+                .resizable()
+                .scaledToFill()
+                .opacity(0.5)
+                .edgesIgnoringSafeArea(.all)
+        )
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true) // Hide the back button
+        .padding(.horizontal, 20)
     }
 }
+
+
+
 
 // View
 struct DashboardView: View {
@@ -101,107 +310,192 @@ struct ClientsView: View {
     @State private var selectedClient: Client?
     @State private var isAddingClient = false
     @State private var newClientName = ""
-    @State private var newClientHeight = 0.0
-    @State private var newClientWeight = 0.0
-    @State private var newClientAge = 0
+    @State private var newClientHeight = ""
+    @State private var newClientWeight = ""
+    @State private var newClientAge = ""
     @State private var newClientGender = Gender.male // Default to Male
 
     var body: some View {
         NavigationView {
             List {
                 ForEach(viewModel.clients) { client in
-                    Button(action: {
-                        selectedClient = client
-                    }) {
-                        Text(client.name)
+                    HStack {
+                        Button(action: {
+                            selectedClient = client
+                        }) {
+                            Text(client.name)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                        }
+                        Spacer()
+                        Button(action: {
+                            // Handle delete action here
+                        }) {
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundColor(.red)
+                        }
                     }
                 }
             }
             .navigationBarTitle("Clients")
+
             .navigationBarItems(trailing:
                 Button(action: {
                     isAddingClient = true
                 }) {
-                    Text("New Client")
+                    Image(systemName: "plus")
                         .padding(10)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
                 }
             )
-        }
-        .sheet(isPresented: $isAddingClient) {
-            // New Client Form
-            VStack {
-                Text("New Client Form")
-                    .font(.title)
+            .sheet(isPresented: $isAddingClient) {
+                VStack {
+                    Text("New Client Form")
+                        .font(.title)
+                        .padding()
+
+                    TextField("Enter Client Name", text: $newClientName)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+
+                    TextField("Enter Height", text: $newClientHeight)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+
+                    TextField("Enter Weight", text: $newClientWeight)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+
+                    TextField("Enter Age", text: $newClientAge)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+
+                    Picker("Select Gender", selection: $newClientGender) {
+                        ForEach(Gender.allCases, id: \.self) { gender in
+                            Text(gender.rawValue)
+                        }
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
                     .padding()
-                
-                TextField("Enter Client Name", text: $newClientName)
-                    .padding()
-                
-                TextField("Enter Height", value: $newClientHeight, formatter: NumberFormatter())
-                    .keyboardType(.decimalPad)
-                    .padding()
-                
-                TextField("Enter Weight", value: $newClientWeight, formatter: NumberFormatter())
-                    .keyboardType(.decimalPad)
-                    .padding()
-                
-                TextField("Enter Age", value: $newClientAge, formatter: NumberFormatter())
-                    .keyboardType(.numberPad)
-                    .padding()
-                
-                Picker("Select Gender", selection: $newClientGender) {
-                    ForEach(Gender.allCases, id: \.self) { gender in
-                        Text(gender.rawValue)
+
+                    HStack {
+                        Button("Cancel", action: {
+                            isAddingClient = false
+                        })
+                        .buttonStyle(DefaultButtonStyle())
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.red)
+                        .cornerRadius(10)
+
+                        Button("Add Client", action: {
+                            let newClientID = UUID()
+
+                            let height = Double(newClientHeight) ?? 0.0
+                            let weight = Double(newClientWeight) ?? 0.0
+                            let age = Int(newClientAge) ?? 0
+
+                            let newClient = Client(
+                                id: newClientID,
+                                name: newClientName,
+                                height: height,
+                                weight: weight,
+                                age: age,
+                                gender: newClientGender
+                            )
+
+                            viewModel.clients.append(newClient)
+                            isAddingClient = false
+                        })
+                        .buttonStyle(DefaultButtonStyle())
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(10)
                     }
                 }
-                .pickerStyle(SegmentedPickerStyle())
-                .padding()
-                
-                Button("Add Client", action: {
-                    // Generate a new ID for the client
-                    let newClientID = UUID()
-                    
-                    // Create a new client with the entered information
-                    let newClient = Client(
-                        id: newClientID,
-                        name: newClientName,
-                        height: newClientHeight,
-                        weight: newClientWeight,
-                        age: newClientAge,
-                        gender: newClientGender
-                    )
-                    
-                    // Add the new client to the view model
-                    viewModel.clients.append(newClient)
-                    
-                    // Close the sheet
-                    isAddingClient = false
-                })
-                .padding(10)
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .cornerRadius(10)
+            }
+
+            .sheet(item: $selectedClient) { client in
+                NavigationView {
+                    ClientDetailView(client: client)
+                }
             }
         }
-        .sheet(item: $selectedClient) { client in
-            NavigationView {
-                ClientDetailView(client: client)
+    }
+}
+
+
+
+// View
+struct SettingsView: View {
+    struct MockUserData {
+        var pushNotificationsEnabled: Bool
+        var darkModeEnabled: Bool
+    }
+
+    // Create mock user data
+    @State private var mockUserData = MockUserData(pushNotificationsEnabled: true, darkModeEnabled: false)
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Profile Settings")) {
+                    NavigationLink(destination: ProfileSettingsView()) {
+                        Text("Edit Profile")
+                    }
+                }
+                
+                Section(header: Text("App Settings")) {
+                    Toggle("Push Notifications", isOn: $mockUserData.pushNotificationsEnabled)
+                    Toggle("Dark Mode", isOn: $mockUserData.darkModeEnabled)
+                }
+                
+                Section(header: Text("Account Settings")) {
+                    Button(action: {
+                        // Handle account related actions
+                    }) {
+                        Text("Sign Out")
+                            .foregroundColor(.red)
+                    }
+                }
             }
+            .navigationBarTitle("Settings")
         }
     }
 }
 
 // View
-struct SettingsView: View {
+struct ProfileSettingsView: View {
+    @State private var newName = userSettings.name
+    @State private var newEmail = userSettings.email
+
     var body: some View {
-        Text("Settings")
+        Form {
+            Section(header: Text("Profile Information")) {
+                TextField("Name", text: $newName)
+                TextField("Email", text: $newEmail)
+            }
+            
+            Section {
+                Button(action: {
+                    userSettings.name = newName
+                    userSettings.email = newEmail
+                    // Save changes and update user settings
+                }) {
+                    Text("Save Changes")
+                }
+            }
+        }
+        .navigationBarTitle("Edit Profile")
     }
 }
 
+
 struct ContentView: View {
+    let warmBrownUIColor = UIColor(red: 139/255, green: 69/255, blue: 19/255, alpha: 1.0)
     @StateObject var clientsViewModel = ClientsViewModel()
     @StateObject var nutritionalPlansViewModel = NutritionalPlansViewModel()
     @State private var showingNutritionalPlans = false
@@ -214,21 +508,21 @@ struct ContentView: View {
                         NavigationLink(destination: DashboardView()) {
                             Text("Dashboard")
                                 .padding(20)
-                                .background(Color.blue)
+                                .background(warmBrownUIColor.toColor())
                                 .foregroundColor(.white)
                                 .cornerRadius(10)
                         }
                         NavigationLink(destination: ClientsView(viewModel: clientsViewModel)) {
                             Text("Clients")
                                 .padding(20)
-                                .background(Color.green)
+                                .background(warmBrownUIColor.toColor())
                                 .foregroundColor(.white)
                                 .cornerRadius(10)
                         }
                         NavigationLink(destination: SettingsView()) {
                             Text("Settings")
                                 .padding(20)
-                                .background(Color.purple)
+                                .background(warmBrownUIColor.toColor())
                                 .foregroundColor(.white)
                                 .cornerRadius(10)
                         }
@@ -243,12 +537,13 @@ struct ContentView: View {
                             }) {
                                 Text("Nutritional Plans")
                                     .padding(20)
-                                    .background(Color.orange)
+                                    .background(warmBrownUIColor.toColor())
                                     .foregroundColor(.white)
                                     .cornerRadius(10)
                             }
                         }
                     )
+                    Spacer()
                 }
                 .navigationBarTitle("", displayMode: .inline)
                 .navigationBarItems(leading: Text("NutriGym")
@@ -267,19 +562,19 @@ struct ContentView: View {
                     Text("Clients")
                 }
 
-//            NutritionalPlansView(viewModel: nutritionalPlansViewModel)
-//                .tabItem {
-//                    Image(systemName: "doc.text")
-//                    Text("Nutritional Plans")
-//                }
-
             SettingsView()
                 .tabItem {
                     Image(systemName: "gear")
                     Text("Settings")
                 }
-            
+
         }
+        .background(
+            Image("testback")
+                .resizable()
+                .scaledToFill()
+                .edgesIgnoringSafeArea(.all)
+        )
     }
 }
 
@@ -287,7 +582,7 @@ struct ContentView: View {
 struct ClientDetailView: View {
     @Environment(\.presentationMode) var presentationMode
     let client: Client
-    
+
     // Create a NumberFormatter for formatting height and weight
     private let numberFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
@@ -315,9 +610,9 @@ struct ClientDetailView: View {
                 Spacer()
                 Text("Gender: \(client.gender.rawValue)")
             }
-            .font(.subheadline)
-            .foregroundColor(.gray)
-            .padding(.top, 5)
+            .font(.headline)
+            .foregroundColor(.black)
+            .padding(.horizontal, 20)
             
             Divider()
                 .padding([.top, .bottom], 10)
@@ -329,21 +624,57 @@ struct ClientDetailView: View {
             }
             .font(.headline)
             .foregroundColor(.black)
+            .padding(.horizontal, 20)
             
             Spacer()
+            
+            HStack {
+                Spacer()
+                Button(action: {
+                    // Handle delete action here
+                }) {
+                    Image(systemName: "trash.circle.fill")
+                        .resizable()
+                        .frame(width: 30, height: 30)
+                        .foregroundColor(.red)
+                }
+                .padding()
+                Spacer()
+            }
         }
-        .navigationBarTitle(client.name)
-        .navigationBarItems(trailing: Button(action: {
-            presentationMode.wrappedValue.dismiss()
-        }) {
-            Text("Close")
-                .padding(10)
-                .background(Color.red)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-        })
+        .navigationBarTitle("Client Details")
+        .navigationBarItems(trailing:
+            Button(action: {
+                presentationMode.wrappedValue.dismiss()
+            }) {
+                Text("Close")
+                    .padding(10)
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+        )
+        .modifier(BackgroundImageModifier(imageName: "dumbbell", opacity: 0.5)
+        )
     }
 }
+
+struct BackgroundImageModifier: ViewModifier {
+    var imageName: String
+    var opacity: Double
+    
+    func body(content: Content) -> some View {
+        content
+            .background(
+                Image(imageName)
+                    .resizable()
+                    .scaledToFill()
+                    .opacity(opacity)
+                    .edgesIgnoringSafeArea(.all) // Ignore safe area insets
+            )
+    }
+}
+
 
 #Preview {
     ContentView()
