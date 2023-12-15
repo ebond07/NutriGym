@@ -68,6 +68,12 @@ class ClientsViewModel: ObservableObject {
             // Add more clients as needed
         ]
     }
+    
+    func removeClient(_ client: Client) {
+            if let index = clients.enumerated().first(where: { $0.element.id == client.id })?.offset {
+                clients.remove(at: index)
+            }
+        }
 }
 
 
@@ -85,6 +91,12 @@ class NutritionalPlansViewModel: ObservableObject {
             NutritionalPlan(id: UUID(), name: "Plan 5", description: "Description for Plan 5", caloriesPerDay: 2100, proteinIntake: 140.0, carbohydrateIntake: 240.0, fatIntake: 52.0)
             // Add more nutritional plans as needed
         ]
+    }
+    func removePlan(_ nutritionalPlan: NutritionalPlan) {
+        if let index = nutritionalPlans.enumerated().first(where: {
+            $0.element.id == nutritionalPlan.id })?.offset {
+            nutritionalPlans.remove(at: index)
+        }
     }
 }
 
@@ -115,6 +127,9 @@ struct NutritionalPlansView: View {
                         }) {
                             Image(systemName: "minus.circle.fill")
                                 .foregroundColor(.red)
+                                .onTapGesture {
+                                    viewModel.removePlan(plan)
+                                }
                         }
                     }
                 }
@@ -329,10 +344,12 @@ struct ClientsView: View {
                         }
                         Spacer()
                         Button(action: {
-                            // Handle delete action here
                         }) {
                             Image(systemName: "minus.circle.fill")
                                 .foregroundColor(.red)
+                                .onTapGesture {
+                                    viewModel.removeClient(client)
+                                }
                         }
                     }
                 }
@@ -581,6 +598,7 @@ struct ContentView: View {
 
 struct ClientDetailView: View {
     @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var viewModel: ClientsViewModel
     let client: Client
 
     // Create a NumberFormatter for formatting height and weight
@@ -631,7 +649,8 @@ struct ClientDetailView: View {
             HStack {
                 Spacer()
                 Button(action: {
-                    // Handle delete action here
+                    viewModel.removeClient(client)
+                    presentationMode.wrappedValue.dismiss()
                 }) {
                     Image(systemName: "trash.circle.fill")
                         .resizable()
